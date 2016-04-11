@@ -1,106 +1,88 @@
-function [rx_bin] = demapping(rx_symb,Nbps,modulation)
-% Modulation and Coding Project
-% TEAM: MOY - Mroueh Michael, Asfour A. Omar, Liu Yu
-% April 2016
-% Part 1 - Optimal communication chain over the ideal channel
+function [bit_rx] = demapping(symb_rx,Nbps,modulation)
 
+% INPUTS:
+% - symb_rx : vector of input symbols (variance 1)
+% - Nbps : number of bits per symbol
+% - modulation : 'pam' or 'qam'
+%
+% OUTPUTS:
+% - bit_rx : vector of ouput bits
 
-%% DEMAPPING
-% INPUTS
-    % 'rx_symb' - Symbols
-    % 'modulation' - Digital Modulation [PSK, PAM, QAM, CQAM]
-    % 'Nbps' - Number of bits per symbol [1, 2, 3, 4, 5, 6]
-% OUTPUT
-    % 'rx_bit' - Bitstream
+Nsymb = size(symb_rx,1); % Number of symbols
 
-%% INITIALIZATION
-Nsymb = size(rx_symb,1); % Number of symbols
-
-switch modulation
-    %% ***** PULSE AMPLITUDE MODULATION *****
-    case 'PAM'
+switch modulation,
+    
+    case 'pam'
+        
         % Symbol to integer
-        distance = 2/(2^Nbps-1);
-        rx_int = rx_symb/distance + (2^Nbps-1)/2;
+        sigma = sqrt(sum(([0:2^Nbps-1]-(2^Nbps-1)/2).^2)/2^Nbps); 
+        int_rx = sigma * symb_rx + (2^Nbps-1)/2;
+
+        % Integer detection
+        int_det = round(int_rx);
+        int_det(find(int_det<0)) = 0;
+        int_det(find(int_det>2^Nbps-1)) = 2^Nbps-1;
+
         % Integer to binary
-        rx_int = real(round(rx_int));
-        rx_int = max(rx_int, 0); % Discard the potential values interpreted as smaller than the smallest possible integer (0)
-        rx_int(rx_int > 2^Nbps - 1) = 2^Nbps - 1; % Discard the potential values interpreted as bigger than the biggest possible integer (2^Nbps-1)
-        rx_bin  = fliplr(de2bi(rx_int));
+        mapp_rx  = fliplr(de2bi(int_det));
+
         % Binary to gray
+        bit_rx2(:,1) = mapp_rx(:,1);
         for ii = 2:Nbps,
-            rx_bin(:,ii) = xor( rx_bin(:,ii-1) , rx_bin(:,ii) );
+            bit_rx2(:,ii) = xor( mapp_rx(:,ii-1) , mapp_rx(:,ii) );
         end
-        rx_bin = reshape(rx_bin',Nsymb*Nbps,1);
 
-        
-        
-    %% ***** QUADRATURE AMPLITUDE MODULATION *****    
-    case  'QAM'
-       switch Nbps
-            case 1 % Go back to the simple PAM case
-                distance = 2/(2^Nbps-1);
-                rx_int = rx_symb/distance + (2^Nbps-1)/2;
-                rx_int = real(round(rx_int));
-                rx_int = max(rx_int, 0);
-                rx_int(rx_int > 2^Nbps - 1) = 2^Nbps - 1;
-                rx_bin  = fliplr(de2bi(rx_int));
-                for ii = 2:Nbps,
-                    rx_bin(:,ii) = xor( rx_bin(:,ii-1) , rx_bin(:,ii) );
-                end
-                rx_bin = reshape(rx_bin',Nsymb*Nbps,1);
+        bit_rx = reshape(bit_rx2',Nsymb*Nbps,1);
 
-            otherwise % RECTANGULAR-QAM
-        
-            Nbps_I = ceil(Nbps/2); % Number of symbols carried in the 'Inphase Carrier'
-            Nbps_Q = Nbps - Nbps_I; % Number of symbols carried in the 'Quadrature Carrier'
+    case 'qam'
 
-            %% *** REAL PART ***
-            rx_symb_I = real(rx_symb);
-            % Symbol to integer
-            distance = 2/(2^Nbps_I-1); 
-            rx_int_I = rx_symb_I/distance + (2^Nbps_I-1)/2;
-            % Integer to binary
-            rx_int_I = round(rx_int_I);
-            rx_int_I = max(rx_int_I, 0); % Discard the potential values interpreted as smaller than the smallest possible integer (0)
-            rx_int_I(rx_int_I > 2^Nbps_I - 1) = 2^Nbps_I - 1; % Discard the potential values interpreted as bigger than the biggest possible integer (2^Nbps-1)
-            rx_bin_I  = fliplr(de2bi(rx_int_I));
-            % Binary to gray
-            for ii = 2:Nbps_I,
-                rx_bin_I(:,ii) = xor( rx_bin_I(:,ii-1) , rx_bin_I(:,ii) );
-            end
+        % REAL PART
+        NbpsI = Nbps/2; 
+        symb_rxI = real(symb_rx);
 
-            %% *** IMAGINARY PART ***
-            rx_symb_Q = imag(rx_symb);
-            % Symbol to integer
-            rx_int_Q = rx_symb_Q/distance + (2^Nbps_Q-1)/2;
-            % Integer to binary
-            rx_int_Q = round(rx_int_Q);
-            rx_int_Q = max(rx_int_Q, 0); % Discard the potential values interpreted as smaller than the smallest possible integer (0)
-            rx_int_Q(rx_int_Q > 2^Nbps_Q - 1) = 2^Nbps_Q - 1; % Discard the potential values interpreted as bigger than the biggest possible integer (2^Nbps-1)
-            rx_bin_Q  = fliplr(de2bi(rx_int_Q));
-            % Binary to gray
-            for ii = 2:Nbps_Q,
-                rx_bin_Q(:,ii) = xor( rx_bin_Q(:,ii-1) , rx_bin_Q(:,ii) );
-            end     
-
-            %% *** BIT CONCATENATION ***
-            rx_bin = reshape([rx_bin_I,rx_bin_Q]',Nsymb*Nbps,1);
-       end
-        
-        
-    %% ***** PHASE SHIFT KEYING *****
-    case 'PSK'
         % Symbol to integer
-        rx_int = (pi*5/4 + angle(rx_symb)) * (2^Nbps)/(pi*2);
+        sigmaI = sqrt(sum(([0:2^NbpsI-1]-(2^NbpsI-1)/2).^2)/2^NbpsI); 
+        int_rxI = sigmaI * sqrt(2) * symb_rxI + (2^NbpsI-1)/2;
+
+        % Integer detection
+        int_detI = round(int_rxI);
+        int_detI(find(int_detI<0)) = 0;
+        int_detI(find(int_detI>2^NbpsI-1)) = 2^NbpsI-1;
+
         % Integer to binary
-        rx_int = real(round(rx_int));
-        rx_int = max(rx_int, 0); % Discard the potential values interpreted as smaller than the smallest possible integer (0)
-        rx_int(rx_int > 2^Nbps - 1) = 2^Nbps - 1; % Discard the potential values interpreted as bigger than the biggest possible integer (2^Nbps-1)
-        rx_bin  = fliplr(de2bi(rx_int));
+        mapp_rxI  = fliplr(de2bi(int_detI));
+
         % Binary to gray
-        for ii = 2:Nbps,
-            rx_bin(:,ii) = xor( rx_bin(:,ii-1) , rx_bin(:,ii) );
+        bit_rx2I(:,1) = mapp_rxI(:,1);
+        for ii = 2:NbpsI,
+            bit_rx2I(:,ii) = xor( mapp_rxI(:,ii-1) , mapp_rxI(:,ii) );
         end
-        rx_bin = reshape(rx_bin',Nsymb*Nbps,1);
+
+         
+        % IMAGINARY PART
+        NbpsQ = Nbps/2; 
+        symb_rxQ = imag(symb_rx);
+
+        % Symbol to integer
+        sigmaQ = sqrt(sum(([0:2^NbpsQ-1]-(2^NbpsQ-1)/2).^2)/2^NbpsQ); 
+        int_rxQ = sigmaQ * sqrt(2) * symb_rxQ + (2^NbpsQ-1)/2;
+
+        % Integer detection
+        int_detQ = round(int_rxQ);
+        int_detQ(find(int_detQ<0)) = 0;
+        int_detQ(find(int_detQ>2^NbpsI-1)) = 2^NbpsQ-1;
+
+        % Integer to binary
+        mapp_rxQ  = fliplr(de2bi(int_detQ));
+
+        % Binary to gray
+        bit_rx2Q(:,1) = mapp_rxQ(:,1);
+        for ii = 2:NbpsQ,
+            bit_rx2Q(:,ii) = xor( mapp_rxQ(:,ii-1) , mapp_rxQ(:,ii) );
+        end
+      
+         
+        % BIT CONCATENATION
+        bit_rx = reshape([bit_rx2I,bit_rx2Q]',Nsymb*Nbps,1);
+        
 end
