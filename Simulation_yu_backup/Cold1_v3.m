@@ -21,12 +21,12 @@ Modu.Nbps = 4; %[!] 16QAM(4bits)
 Modu.bps = 1e7; % [bits/sec] assuming 1sec for such length of bits
 Modu.fsymb = Modu.bps/Modu.Nbps; % [sample/sec] 1e4
 Modu.tsymb = 1/Modu.fsymb; % [sec]T:symbol time
-Modu.M = 4; %[!]Up sampling factor
+Modu.M = 20; %[!]Up sampling factor
 Modu.fsample = Modu.M*Modu.fsymb; % define sampling time 4*fsymbol=4e4
 
 tx_bin = randi([0 1],tx_len,1);
 %[tx_symb] = mapping(tx_bin,Modu.Nbps,Modu.mod); % mapping the binary seq get Re,Im
-[tx_symb] = mappinga(tx_bin,Modu.Nbps,'PSK'); % mapping the binary seq get Re,Im
+[tx_symb] = mappinga(tx_bin,Modu.Nbps,'QAM'); % mapping the binary seq get Re,Im
 tx_symb_R = real(tx_symb);
 tx_symb_I = imag(tx_symb);
 % plot constellations figure
@@ -72,7 +72,7 @@ tx_af_R = real(tx_af);
 
 % Calculate the energy of the signa
 
-EbN0 = 10;
+EbN0 = 3;
 EbN0mag = 10^(EbN0/10);
 SignalEnergy = (trapz(abs(tx_af).^2))*(1/(Modu.fsample));
 Eb = SignalEnergy/tx_len;

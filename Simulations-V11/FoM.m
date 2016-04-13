@@ -7,13 +7,8 @@ function FoM()
 
 %% This function is used in order to plot different Graphs and FoMs
 clear; clc; close all;
-
-%% startup.m template
-set(0,'defaultFigurePosition', [10 10 600 450]);
-set(0,'defaultAxesFontSize', 12);
-set(0, 'defaultTextFontSize', 12);
-set(0, 'defaultAxesFontName', 'Palatino Linotype');
-set(0, 'defaultTextFontName', 'Palatino Linotype');
+set(0,'defaultFigurePosition', [10 10 600 450]); set(0,'defaultAxesFontSize', 12); set(0, 'defaultTextFontSize', 12);
+set(0, 'defaultAxesFontName', 'Palatino Linotype'); set(0, 'defaultTextFontName', 'Palatino Linotype');
 
 %% *******************************************
 %% ** DECOMMENTS HERE WHAT YOU WANT TO PLOT ** 'print -dmeta' command to add to .docx
@@ -21,14 +16,14 @@ set(0, 'defaultTextFontName', 'Palatino Linotype');
 
 %% ***** CONSTELLATION DIAGRAMS *****
 % rx_Constellation_Symbols('PAM', 3, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
-% rx_Constellation_Symbols('PSK', 1, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
+% rx_Constella'tion_Symbols('PSK', 1, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('Cross-QAM', 3, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('Optimal-8QAM', 3, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
-% rx_Constellation_Symbols('QAM', 3, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
+ rx_Constellation_Symbols('QAM', 4, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('PAM', 4, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('PSK', 5, 10); % Plot the Received Constellation Symbols (1 Graph)
-% rx_Constellation_Symbols('QAM', 4, 10); % Plot the Received Constellation Symbols (1 Graph)
-% rx_Constellation_Symbols('Cross-QAM', 4, 10); % Plot the Received Constellation Symbols (1 Graph)
+% rx_Constellation_Symbols('QAM', 8, 10); % Plot the Received Constellation Symbols (1 Graph)
+% rx_Constellation_Symbols('Cross-QAM', 7, 10); % Plot the Received Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('Optimal-8QAM', 3, 10); % Plot the Received Constellation Symbols (1 Graph)
 
 
@@ -38,13 +33,14 @@ set(0, 'defaultTextFontName', 'Palatino Linotype');
 % SER_EbN0_NGraphs(); % Plot SER in function of Eb/N0 for different Modulation Schemes on [2, 4, 8, 16, 32, 64,...] Symbols (N Graphs)
 % Hamming_Distance(); % Plot Ecoding ('BER/SER*Nbps') in function of Eb/N0 for different Modulation Schemes on [2, 4, 8, 16, 32, 64,...] Symbols (N Graphs) - Corresponds to a 'Pseudo Apparent Hamming Distance'
 BER_Theory_VS_Simulation('QAM'); % Compare the theoretical BER and the one obtained in our simulation in function of Eb/N0 for the ['PAM', 'QAM'] on [4, 16, 64, 256] Symbols (1 Graph)
-BER_Theory_VS_Simulation('PSK'); % Compare the theoretical BER and the one obtained in our simulation in function of Eb/N0 for the ['PAM', 'QAM'] on [4, 16, 64, 256] Symbols (1 Graph)
+BER_Theory_VS_Simulation_Report_2_4_QAM_PSK('PSK'); % Compare the theoretical and simulated BER for [2&4 QAM&PSK] - Report Requirements
 
 
 %% ***** FILTERS *****
 %RRCF_IR_Spectrum(0.25, 33, 5e6, 4); % Plot the Spectrum and Impulse Response of the RRCF for different Roll-off Factors
 
-%% Figures for report
+
+%% ***** OTHER FIGURES FOR REPORT *****
 % figure(1)
 % subplot(1,4,1)
 % tx_Constellation_Symbols('QAM', 4, 0);
@@ -72,23 +68,19 @@ BER_Theory_VS_Simulation('PSK'); % Compare the theoretical BER and the one obtai
 %% Plot the Transmitted Constellation Symbols (1 Graph)
 function tx_Constellation_Symbols(mod, Nbps, EbN0)
 [~, ~, tx_symb, ~] = DVBS2CommunicationChain(mod, Nbps, EbN0);
-%figure; 
-scatter(real(tx_symb),imag(tx_symb), 'filled');
-ax=gca; %ax.XAxisLocation = 'origin'; ax.YAxisLocation = 'origin'; % Set the axis to the origin
+figure; scatter(real(tx_symb),imag(tx_symb), 'filled');
+ax=gca; ax.XAxisLocation = 'origin'; ax.YAxisLocation = 'origin'; % Set the axis to the origin
 ax.XLim = [min(real(tx_symb)) - 0.25, max(real(tx_symb)) + 0.25]; ax.YLim = [min(real(tx_symb)) - 0.25, max(real(tx_symb)) + 0.25]; ax.XLimMode = 'manual'; axis square; % Set the axis limits
-%title(['Constellation Symbols of ', num2str(2^Nbps), mod]); 
-xlabel('In-Phase'); ylabel('Quadrature'); %hold on;
+title(['Constellation Symbols of ', num2str(2^Nbps), mod]); xlabel('In-Phase'); ylabel('Quadrature'); hold on;
 
 
 function rx_Constellation_Symbols(mod, Nbps, EbN0)
 %% Plot the Received Constellation Symbols (1 Graph)
 [~, ~, tx_symb, rx_symb] = DVBS2CommunicationChain(mod, Nbps, EbN0);
-%figure; 
-scatter(real(rx_symb),imag(rx_symb), 'magenta', 'filled'); hold on; scatter(real(tx_symb),imag(tx_symb), 20, 'blue', '+');
-ax=gca; %ax.XAxisLocation = 'origin'; ax.YAxisLocation = 'origin';
+figure; scatter(real(rx_symb),imag(rx_symb), 'magenta', 'filled'); hold on; scatter(real(tx_symb),imag(tx_symb), 20, 'blue', '+');
+ax=gca; ax.XAxisLocation = 'origin'; ax.YAxisLocation = 'origin';
 ax.XLim = [min(real(tx_symb)) - 0.25, max(real(tx_symb)) + 0.25]; ax.YLim = [min(real(tx_symb)) - 0.25, max(real(tx_symb)) + 0.25]; ax.XLimMode = 'manual'; axis square;
-%title(['Constellation Symbols of ', num2str(2^Nbps), mod, ' with E_{b}/N_{0} = ', num2str(EbN0)]); 
-xlabel('In-Phase'); ylabel('Quadrature');
+title(['Constellation Symbols of ', num2str(2^Nbps), mod, ' with E_{b}/N_{0} = ', num2str(EbN0)]); xlabel('In-Phase'); ylabel('Quadrature');
 
 
 %% Plot BER in function of Eb/N0 for different Modulation Schemes on [2, 4, 8, 16, 32, 64,...] Symbols (N Graphs)
@@ -233,8 +225,7 @@ max_Eb_N0 = 20;
 BER = zeros(1,(round((max_Eb_N0-min_Eb_N0)/step_Eb_N0) + 1));
 
 figure;
-%for Nbps = 2:2:8
-for Nbps = 1:1:2
+for Nbps = 2:2:8
     index = 1;
     M = 2^Nbps;
     for EbN0 = min_Eb_N0:step_Eb_N0:max_Eb_N0
@@ -248,16 +239,48 @@ for Nbps = 1:1:2
             theoretical_BER = 1/2 * (4/Nbps) * (1 - 1/sqrt(M)) * erfc( sqrt( (3*Nbps)/(M-1) * 10.^((min_Eb_N0:step_Eb_N0:max_Eb_N0)/10) )/sqrt(2));
         case 'PAM'
             theoretical_BER = 1/2 * (2*(M-1)/(M*Nbps)) * erfc( sqrt( (6*Nbps)/(M^2 - 1) * 10.^((min_Eb_N0:step_Eb_N0:max_Eb_N0)/10) )/sqrt(2));
-        case 'PSK'
-            theoretical_BER = 0.5*erfc(sqrt(10.^((min_Eb_N0:step_Eb_N0:max_Eb_N0)/10))); 
         otherwise
     end
     semilogy(min_Eb_N0:step_Eb_N0:max_Eb_N0, theoretical_BER);
 end
-%title({('Comparison of the Simulated BER with the Theoretical one in function of the E_{b}/N_{0} ratio'), ['Comparison of the ', mod, ' for [4, 16, 64, 256] symbols']}); 
+title({('Comparison of the Simulated BER with the Theoretical one in function of the E_{b}/N_{0} ratio'), ['Comparison of the ', mod, ' for [4, 16, 64, 256] symbols']}); xlabel('E_{b}/N_{0} [dB]'); ylabel('BER');
+legend(['Simulated 4', mod], ['Theoretical 4', mod], ['Simulated 16', mod], ['Theoretical 16', mod], ['Simulated 64', mod], ['Theoretical 64', mod], ['Simulated 256', mod], ['Theoretical 256', mod], 'Location','southoutside'); legend('boxoff');
+
+
+%% Compare the theoretical and simulated BER for [2&4 QAM&PSK] - Report Requirements
+function BER_Theory_VS_Simulation_Report_2_4_QAM_PSK(mod)
+min_Eb_N0 = 0;
+step_Eb_N0 = 0.4;
+max_Eb_N0 = 20;
+BER = zeros(1,(round((max_Eb_N0-min_Eb_N0)/step_Eb_N0) + 1));
+
+figure;
+for Nbps = 1:2
+    index = 1;
+    M = 2^Nbps;
+    for EbN0 = min_Eb_N0:step_Eb_N0:max_Eb_N0
+        [BER(1,index), ~, ~, ~] = DVBS2CommunicationChain(mod, Nbps, EbN0);
+        index = index + 1;
+    end
+    
+    semilogy(min_Eb_N0:step_Eb_N0:max_Eb_N0, BER(1, :), 'o'); hold on;
+    switch mod
+        case 'QAM'
+            switch Nbps
+                case 1
+                    theoretical_BER = 1/2 * (2*(M-1)/(M*Nbps)) * erfc( sqrt( (6*Nbps)/(M^2 - 1) * 10.^((min_Eb_N0:step_Eb_N0:max_Eb_N0)/10) )/sqrt(2));
+                case 2
+                    theoretical_BER = 1/2 * (4/Nbps) * (1 - 1/sqrt(M)) * erfc( sqrt( (3*Nbps)/(M-1) * 10.^((min_Eb_N0:step_Eb_N0:max_Eb_N0)/10) )/sqrt(2));
+            end
+        case 'PSK'
+            theoretical_BER = 1/2*erfc(sqrt(10.^((min_Eb_N0:step_Eb_N0:max_Eb_N0)/10)));
+        otherwise
+    end
+    semilogy(min_Eb_N0:step_Eb_N0:max_Eb_N0, theoretical_BER);
+end
+title({('Comparison of the Simulated BER with the Theoretical one in function of the E_{b}/N_{0} ratio'), ['Comparison of the ', mod, ' for [2, 4] symbols']});
 xlabel('E_{b}/N_{0} [dB]'); ylabel('BER');
-legend(['Simulated B', mod], ['Theoretical B', mod], ['Simulated Q', mod], ['Theoretical Q', mod]); legend('boxoff');
-%legend(['Simulated 4', mod], ['Theoretical 4', mod], ['Simulated 16', mod], ['Theoretical 16', mod], ['Simulated 64', mod], ['Theoretical 64', mod], ['Simulated 256', mod], ['Theoretical 256', mod], 'Location','southoutside'); legend('boxoff');
+legend(['Simulated B', mod], ['Theoretical B', mod], ['Simulated Q', mod], ['Theoretical Q', mod], 'Location','southoutside'); legend('boxoff');
 
 
 %% Plot the Spectrum and Impulse Response of the RRCF for different Roll-off Factors and Number of Taps
@@ -271,6 +294,6 @@ for Beta = 0:Beta_step:1
     figure(fig2); plot(f_axis, H_RRCF, '-o'); hold on;
 end
 legendCell = cellstr(num2str((0:Beta_step:1)', 'Beta = %g'));
-figure(fig1); title({'Impulse Response of the Root-Raised-Cosine Filter'}); xlabel('Time [µs]'); ylabel('g(t)'); legend(legendCell, 'Location','southoutside'); legend('boxoff');
-figure(fig2); title({'Spectrum of the Root-Raised-Cosine Filter'}); xlabel('Frequency [MHz]'); ylabel('G(f)'); legend(legendCell, 'Location','southoutside'); legend('boxoff');
+figure(fig1); title({'Impulse Response of the Root-Raised-Cosine Filter', ['Comparison for different values of the Roll-off Factor with N_{taps} = ' num2str(Ntaps) ', f_{symb} = ' num2str(fsymb/(1e6)) 'MHz and f_{s} = ' num2str(fs/(1e6)),'MHz']}); xlabel('Time [µs]'); ylabel('g(t)'); legend(legendCell, 'Location','southoutside'); legend('boxoff');
+figure(fig2); title({'Spectrum of the Root-Raised-Cosine Filter', ['Comparison for different values of the Roll-off Factor with N_{taps} = ' num2str(Ntaps) ', f_{symb} = ' num2str(fsymb/(1e6)) 'MHz and f_{s} = ' num2str(fs/(1e6)),'MHz']}); xlabel('Frequency [MHz]'); ylabel('G(f)'); legend(legendCell, 'Location','southoutside'); legend('boxoff');
 

@@ -18,7 +18,7 @@ function [IR_RRC, H_RRCF, t_axis, f_axis] = RRCFDesign(Beta, Ntaps, fs, Tsymb)
 
 %% The RCF is designed in the frequency domain
 %% The Impulse Response is then obtained by IFFT
-fmax = (1/Ntaps)*fs*(Ntaps-1)/2; % Maximal frequency on the axis - Tends to fs for Ntaps tending to infinity
+fmax = (1/Ntaps)*fs*(Ntaps-1)/2; % Maximal frequency on the axis - Tends to fs/2 for Ntaps tending to infinity
 f_axis = linspace(-fmax, fmax, Ntaps);
 t_axis = (-(Ntaps-1)/2:(Ntaps-1)/2)./(2*fmax);
 H_RCF = zeros(1,Ntaps); % Fourier Transform of the RCF
@@ -36,6 +36,5 @@ end
 H_RRCF = sqrt(H_RCF);
 IR_RRC = fftshift(ifft(ifftshift(H_RRCF), 'symmetric')); 
 normCoeff = sqrt(max(abs(conv(IR_RRC,IR_RRC))));
-IR_RRC=IR_RRC/normCoeff;
-
+IR_RRC=IR_RRC/normCoeff; % Normalize -> the RCF will then be equal to 1 @ t=0 (and not the RRCF !)
 end

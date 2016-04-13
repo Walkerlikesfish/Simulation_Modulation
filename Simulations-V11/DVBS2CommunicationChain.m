@@ -88,6 +88,7 @@ N0 = Eb/EbN0_ratio; % Noise PSD - We consider AWGN, so N0 is constant on the who
 NoisePower = 2*N0*RRCF.fs; % Noise Power
 noise_AWGN = sqrt(NoisePower/2)*(randn(length(tx_symb_UP_F), 1) + 1i*randn(length(tx_symb_UP_F), 1)); % Generate Zero-Mean AWGN
 rx_usymb_UP_F = tx_symb_UP_F + noise_AWGN; % Add the noise to the transmitted signal
+rx_usymb_UP_F = tx_symb_UP_F;
 
 
 %% 6. [RX] FILTERING WITH ROOT-RAISED-COSINE FILTER
