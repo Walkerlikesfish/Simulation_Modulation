@@ -30,7 +30,7 @@ set(0, 'defaultAxesFontName', 'Palatino Linotype'); set(0, 'defaultTextFontName'
 
 %% ***** Gardner *****
 Nbps=4;
-[~, ~, tx_symb, rx_symb] = DVBS2CommunicationChain_GC('QAM', Nbps, 10, 0, 5, 0);
+[~, ~, tx_symb, rx_symb] = DVBS2CommunicationChain_GC('QAM', Nbps, 50, 10, 0, 0);
 figure; scatter(real(rx_symb),imag(rx_symb), 'magenta', 'filled'); hold on; scatter(real(tx_symb),imag(tx_symb), 20, 'blue', '+');
 
 %BER_EbN0_1Graph_G('QAM')

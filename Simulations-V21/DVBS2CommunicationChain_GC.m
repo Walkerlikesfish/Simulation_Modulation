@@ -1,4 +1,4 @@
-function [BER, SER, tx_symb, rx_symb] = DVBS2CommunicationChain(mod_input, Nbps_input, EbN0_ratio_input, CFO_input, t0_input, phi0_input)
+function [BER, SER, tx_symb, rx_symb] = DVBS2CommunicationChain_GC(mod_input, Nbps_input, EbN0_ratio_input, CFO_input, t0_input, phi0_input)
 % Modulation and Coding Project
 % TEAM: MOY - Mroueh Michael, Asfour A. Omar, Liu Yu
 % April 2016
@@ -40,6 +40,7 @@ function [BER, SER, tx_symb, rx_symb] = DVBS2CommunicationChain(mod_input, Nbps_
 %% RX settings 
 % 1. On/Off Gardner => 0/1
 Gardner_S = 1;
+% 2. On/Off CFO correction
 
 %% ***** RCF PARAMETERS *****
 RRCF.fcutoff = 1e6; % 3dB Cutoff Frequency of the RCF [1MHz]
@@ -143,17 +144,18 @@ plot(rx_symb_UP_async_t0_R(200:300),'o-.k');
 
 [est_error, y_corr] = gardner_est(rx_symb_UP_async_t0, RRCF.M, 0.1);
 figure
-plot(est_error);
+plot(est_error,'b'); hold on
+[est_error, y_corr] = gardner_est(rx_symb_UP_async_t0, RRCF.M, 0.5);
+plot(est_error,'r'); 
+
 title(['Applying Gardner to ',num2str(t0_input),' time shift unit for', num2str(2^Nbps_input), mod_input]); 
 xlabel('Time (pts)'); ylabel('Estimated Error'); hold on;
+legend('K=0.1','K=0.5');
 
 rx_symb_c = downsample(y_corr,RRCF.M);
 rx_bin_c = demapping(rx_symb_c,Modu.Nbps,Modu.mod); % Realize the mapping according to the desired Digital Modulation Scheme and Nbps by applying the ML Criterion
 rx_bin_c_len = size(rx_bin_c,1);
 BER_c = 1 - sum(rx_bin_c(1:rx_bin_c_len) == tx_bin(1:rx_bin_c_len))/(rx_bin_c_len); % Bit Error Ratio
-
-BER
-BER_c
 
 end
 

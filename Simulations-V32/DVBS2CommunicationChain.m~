@@ -150,10 +150,8 @@ xlabel('Time (pts)'); ylabel('Estimated Error'); hold on;
 rx_symb_c = downsample(y_corr,RRCF.M);
 rx_bin_c = demapping(rx_symb_c,Modu.Nbps,Modu.mod); % Realize the mapping according to the desired Digital Modulation Scheme and Nbps by applying the ML Criterion
 rx_bin_c_len = size(rx_bin_c,1);
-BER_c = 1 - sum(rx_bin_c(1:rx_bin_c_len) == tx_bin(1:rx_bin_c_len))/(rx_bin_c_len); % Bit Error Ratio
-
-BER
-BER_c
+BER = 1 - sum(rx_bin(1:rx_bin_c_len) == tx_bin(1:rx_bin_c_len))/(rx_bin_c_len); % Bit Error Ratio
+SER = 1 - sum( bi2de(fliplr(reshape(rx_bin,Modu.Nbps,rx_bin_len/Modu.Nbps)')) == bi2de(fliplr(reshape(tx_bin(1:rx_bin_len),Modu.Nbps,rx_bin_len/Modu.Nbps)'))) / (rx_bin_len/Modu.Nbps); % Symbol Error Ratio
 
 end
 

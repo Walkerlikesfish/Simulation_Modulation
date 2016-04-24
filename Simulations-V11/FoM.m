@@ -19,7 +19,7 @@ set(0, 'defaultAxesFontName', 'Palatino Linotype'); set(0, 'defaultTextFontName'
 % rx_Constella'tion_Symbols('PSK', 1, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('Cross-QAM', 3, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('Optimal-8QAM', 3, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
- rx_Constellation_Symbols('QAM', 4, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
+% rx_Constellation_Symbols('QAM', 4, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('PAM', 4, 10); % Plot the Transmitted Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('PSK', 5, 10); % Plot the Received Constellation Symbols (1 Graph)
 % rx_Constellation_Symbols('QAM', 8, 10); % Plot the Received Constellation Symbols (1 Graph)

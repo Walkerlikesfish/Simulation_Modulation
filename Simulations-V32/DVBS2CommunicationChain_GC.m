@@ -1,4 +1,4 @@
-function [BER, SER, tx_symb, rx_symb] = DVBS2CommunicationChain(mod_input, Nbps_input, EbN0_ratio_input, CFO_input, t0_input, phi0_input)
+function [BER, SER, tx_symb, rx_symb] = DVBS2CommunicationChain_GC(mod_input, Nbps_input, EbN0_ratio_input, CFO_input, t0_input, phi0_input)
 % Modulation and Coding Project
 % TEAM: MOY - Mroueh Michael, Asfour A. Omar, Liu Yu
 % April 2016
@@ -39,7 +39,9 @@ function [BER, SER, tx_symb, rx_symb] = DVBS2CommunicationChain(mod_input, Nbps_
 % EbN0_ratio_input = 5;
 %% RX settings 
 % 1. On/Off Gardner => 0/1
-Gardner_S = 1;
+Gardner_S = 0;
+% 2. Piloting Correlating
+Pilot_S =1;
 
 %% ***** RCF PARAMETERS *****
 RRCF.fcutoff = 1e6; % 3dB Cutoff Frequency of the RCF [1MHz]
@@ -56,15 +58,22 @@ Modu.bps = Modu.fsymb*Modu.Nbps; % Deduct the Bitrate [bits/s] - Depends on the 
 Modu.Tsymb = 1/Modu.fsymb; % Deduct the Period of a symbol [s] (or more rigorously [s/Symb])
 
 %% ***** SYNC PARAMETERS *****
-SYNC.CFO = CFO_input*Modu.fsymb; % Carrier Frequency Offset
+SYNC.CFO = CFO_input; % Carrier Frequency Offset [ppm]
 SYNC.t0 = t0_input; % Sample Time Shift     - Always in [0:Tsymb] (Physically) - [0:M-1] (Digital Simulation)   [Physically = Tsymb*t0/M-1 = t0*Tsample]
 SYNC.phi0 = phi0_input; % Carrier Phase Error - Always in [0:2pi]
+
+%% ***** Gardner PARAMETERS *****
+Gard.K = [0.1 0.5];
+
+%% ***** Pilot PARAMETERS *****
+Pil_nSymb = 256;
+Pil_len = Nbps_input*Pil_nSymb;  % pilot length is 128 bits 
 
 
 %% 1. [TX] GENERATING INFORMATION - RANDOM BITSTREAM
 tx_len = 10000; % Length of the bitstream
 tx_bin = randi([0 1], tx_len,1); % Bitstream - Generate binary sequence (0 and 1 are equiprobable)
-
+Pil_bin = tx_bin(1:Pil_len); % Assuming the first Pil_len bits are pilots 
 
 %% 2. [TX] MAPPING BITSTREAM TO SYMBOLS
 if mod(tx_len,Modu.Nbps) ~= 0 % ZERO PADDING -> Allows to avoid to get an error if the Bitstream length is not a multiple of Nbps
@@ -72,6 +81,7 @@ if mod(tx_len,Modu.Nbps) ~= 0 % ZERO PADDING -> Allows to avoid to get an error 
     tx_len = tx_len + Modu.Nbps - mod(tx_len,Modu.Nbps);
 end
 tx_symb = mapping(tx_bin, Modu.Nbps, Modu.mod); % Realize the mapping according to the desired Digital Modulation Scheme and Nbps
+Pil_symb = tx_symb(1:Pil_nSymb);  % The first nSymb is the Pilot symbol
 
 
 %% 3. [TX] UPSAMPLING
@@ -134,18 +144,22 @@ SER = 1 - sum( bi2de(fliplr(reshape(rx_bin,Modu.Nbps,rx_bin_len/Modu.Nbps)')) ==
 
 %% Gardner algorithm -> ML estimation for t_0 and correct the rx_symb
 if Gardner_S == 1
-    
+    display('Now we are having Gardner not Gardener !')
 %[T]
 figure
 plot(tx_symb_UP_R(200:300),'x-'); hold on
 %plot(tx_symb_UP_F_R(200:300),'o-r'); hold on;
 plot(rx_symb_UP_async_t0_R(200:300),'o-.k');
 
-[est_error, y_corr] = gardner_est(rx_symb_UP_async_t0, RRCF.M, 0.1);
+[est_error, y_corr] = gardner_est(rx_symb_UP_async_t0, RRCF.M, Gard.K(1));
 figure
-plot(est_error);
+plot(est_error,'b'); hold on
+[est_error, y_corr] = gardner_est(rx_symb_UP_async_t0, RRCF.M, Gard.K(2));
+plot(est_error,'r'); 
+
 title(['Applying Gardner to ',num2str(t0_input),' time shift unit for', num2str(2^Nbps_input), mod_input]); 
 xlabel('Time (pts)'); ylabel('Estimated Error'); hold on;
+legend('K=0.1','K=0.5');
 
 rx_symb_c = downsample(y_corr,RRCF.M);
 rx_bin_c = demapping(rx_symb_c,Modu.Nbps,Modu.mod); % Realize the mapping according to the desired Digital Modulation Scheme and Nbps by applying the ML Criterion
@@ -153,8 +167,16 @@ rx_bin_c_len = size(rx_bin_c,1);
 BER_c = 1 - sum(rx_bin_c(1:rx_bin_c_len) == tx_bin(1:rx_bin_c_len))/(rx_bin_c_len); % Bit Error Ratio
 
 BER
+display('After the Gardner Algorithm correcting the receiving time shift')
 BER_c
+end
 
+
+%% Gardner algorithm -> ML estimation for t_0 and correct the rx_symb
+if Pilot_S == 1
+   display('Now we are having Pilot !')
+   [n_est,CFO_est] = pilot_est(rx_symb,Pil_symb,Modu.fsymb)
+   
 end
 
 end
